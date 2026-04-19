@@ -69,3 +69,39 @@ Frontend runs at [http://localhost:5173](http://localhost:5173).
 
 (:Person)-[:DIRECTED]->(:Movie)
 ```
+### Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend (React + Vite)"]
+        UI[Pages: Home, Explore, Connections]
+        API_CLIENT[API Client]
+        GRAPH_VIZ[react-force-graph-2d]
+    end
+
+    subgraph Backend["Backend (FastAPI)"]
+        ROUTES[API Routes]
+        SERVICES[Services Layer]
+        DB_DRIVER[Neo4j Async Driver]
+    end
+
+    subgraph ETL["ETL Pipeline (Python)"]
+        DOWNLOAD[download.py]
+        CLEAN[clean.py]
+        INGEST[ingest.py]
+    end
+
+    subgraph Database["Neo4j (Docker)"]
+        NEO4J["Movie Knowledge Graph"]
+    end
+
+    UI --> API_CLIENT
+    UI --> GRAPH_VIZ
+    API_CLIENT -->|HTTP| ROUTES
+    ROUTES --> SERVICES
+    SERVICES --> DB_DRIVER
+    DB_DRIVER -->|Bolt| NEO4J
+    DOWNLOAD -->|IMDB TSVs| CLEAN
+    CLEAN -->|CSVs| INGEST
+    INGEST -->|Cypher| NEO4J
+```
