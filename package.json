@@ -1,0 +1,27 @@
+{
+  "name": "movie-knowledge-graph",
+  "version": "1.0.0",
+  "description": "A knowledge graph built from IMDB data to explore movie/actor/director relationships, find shortest paths between actors (\"Six Degrees of Kevin Bacon\"), and generate movie recommendations.",
+  "main": "index.js",
+  "scripts": {
+    "dev:infra": "docker compose up",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:full": "concurrently -k -p \"[{name}]\" -n \"infra,frontend\" -c \"magenta,blue\" \"npm run dev:infra\" \"npm run dev:frontend\"",
+    "stop": "docker compose down",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khantseithu/movie-knowledge-graph.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/khantseithu/movie-knowledge-graph/issues"
+  },
+  "homepage": "https://github.com/khantseithu/movie-knowledge-graph#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

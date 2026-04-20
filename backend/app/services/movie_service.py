@@ -8,12 +8,12 @@ async def search_movies(session: AsyncSession, query: str, limit: int = 20) -> l
     result = await session.run(
         """
         MATCH (m:Movie)
-        WHERE toLower(m.title) CONTAINS toLower($query)
+        WHERE toLower(m.title) CONTAINS toLower($q)
         RETURN m.id AS id, m.title AS title, m.releaseYear AS release_year, m.rating AS rating
         ORDER BY m.rating DESC
         LIMIT $limit
         """,
-        query=query,
+        q=query,
         limit=limit,
     )
     records = await result.data()

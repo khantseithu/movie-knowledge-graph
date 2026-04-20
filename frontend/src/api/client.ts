@@ -27,6 +27,11 @@ export interface GraphLink {
   properties: Record<string, unknown>;
 }
 
+export interface GraphData {
+  nodes: GraphNode[];
+  links: GraphLink[];
+}
+
 export interface PathResult {
   path: GraphNode[];
   links: GraphLink[];
@@ -42,6 +47,12 @@ export async function searchMovies(query: string): Promise<{ results: MovieBase[
 export async function searchPersons(query: string): Promise<{ results: PersonBase[]; total: number }> {
   const res = await fetch(`${API_BASE}/persons?q=${encodeURIComponent(query)}`);
   if (!res.ok) throw new Error("Failed to search persons");
+  return res.json();
+}
+
+export async function getNeighbors(nodeId: string): Promise<GraphData> {
+  const res = await fetch(`${API_BASE}/graph/neighbors/${encodeURIComponent(nodeId)}`);
+  if (!res.ok) throw new Error("Failed to fetch graph neighbors");
   return res.json();
 }
 

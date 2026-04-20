@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.neo4j import init_driver, close_driver
-from app.api import health, movies, persons, paths, recommendations
+from app.api import health, movies, persons, paths, recommendations, graph
 
 
 @asynccontextmanager
@@ -38,3 +38,4 @@ app.include_router(movies.router)
 app.include_router(persons.router)
 app.include_router(paths.router)
 app.include_router(recommendations.router)
+app.include_router(graph.router)

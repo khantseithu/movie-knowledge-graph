@@ -8,12 +8,12 @@ async def search_persons(session: AsyncSession, query: str, limit: int = 20) -> 
     result = await session.run(
         """
         MATCH (p:Person)
-        WHERE toLower(p.name) CONTAINS toLower($query)
+        WHERE toLower(p.name) CONTAINS toLower($q)
         RETURN p.id AS id, p.name AS name, p.birthYear AS birth_year
         ORDER BY p.name
         LIMIT $limit
         """,
-        query=query,
+        q=query,
         limit=limit,
     )
     records = await result.data()
