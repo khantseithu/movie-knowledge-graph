@@ -561,6 +561,11 @@ body {
   overflow: hidden;
 }
 
+.graph-layout-container:fullscreen {
+  background: var(--bg-primary);
+  padding: 1.5rem;
+}
+
 .graph-layout {
   flex: 1;
   position: relative;
@@ -568,6 +573,42 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+}
+
+.fullscreen-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(10, 10, 15, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.fullscreen-btn:hover {
+  color: var(--text-primary);
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.graph-overlay {
+  position: absolute;
+  top: 1rem;
+  right: 6rem; /* Shift over so it doesn't overlap fullscreen btn */
+  padding: 0.5rem 1rem;
+  background: rgba(10, 10, 15, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  pointer-events: none;
 }
 
 /* ===== Detail Panel (Sliding Drawer) ===== */

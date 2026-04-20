@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { searchMovies, searchPersons, getNeighbors } from "../api/client";
 import type { MovieBase, PersonBase, GraphData } from "../api/client";
@@ -11,6 +11,27 @@ function ExplorePage() {
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
 
   const { data: movieResults, isLoading: loadingMovies } = useQuery({
     queryKey: ["movies", query],
@@ -71,13 +92,17 @@ function ExplorePage() {
           </button>
           <h2>Exploring the Graph</h2>
         </div>
-        <div className="graph-layout-container">
+        <div className="graph-layout-container" ref={containerRef}>
           <div className="graph-layout">
             <GraphViewer 
               data={graphData} 
               onNodeClick={(node) => handleNodeSelect(node.id)}
             />
             {isExpanding && <div className="graph-overlay">Expanding...</div>}
+            
+            <button className="fullscreen-btn" onClick={toggleFullscreen} title="Toggle Fullscreen">
+              {isFullscreen ? "↙️ Exit Fullscreen" : "↗️ Fullscreen"}
+            </button>
           </div>
 
           <NodeDetailPanel 
