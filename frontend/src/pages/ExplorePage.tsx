@@ -3,11 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { searchMovies, searchPersons, getNeighbors } from "../api/client";
 import type { MovieBase, PersonBase, GraphData } from "../api/client";
 import GraphViewer from "../components/GraphViewer";
+import NodeDetailPanel from "../components/NodeDetailPanel";
 
 function ExplorePage() {
   const [query, setQuery] = useState("");
   const [searchType, setSearchType] = useState<"movies" | "persons">("movies");
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+  const [graphData, setGraphData] = useState<GraphData | null>(null);
+  const [isExpanding, setIsExpanding] = useState(false);
 
   const { data: movieResults, isLoading: loadingMovies } = useQuery({
     queryKey: ["movies", query],
@@ -21,30 +24,68 @@ function ExplorePage() {
     enabled: searchType === "persons" && query.length > 1,
   });
 
-  const { data: graphData, isLoading: loadingGraph } = useQuery<GraphData>({
-    queryKey: ["graph", selectedNodeId],
-    queryFn: () => getNeighbors(selectedNodeId!),
-    enabled: !!selectedNodeId,
-  });
+  const handleNodeSelect = async (nodeId: string) => {
+    setIsExpanding(true);
+    setFocusedNodeId(nodeId);
+    try {
+      const newData = await getNeighbors(nodeId);
+      
+      if (!graphData) {
+        // Initial load from search
+        setGraphData(newData);
+      } else {
+        // Merge with existing graph
+        setGraphData(prev => {
+          if (!prev) return newData;
+          
+          const existingNodeIds = new Set(prev.nodes.map(n => n.id));
+          const newNodes = newData.nodes.filter(n => !existingNodeIds.has(n.id));
+          
+          // Identify unique links (simple source-target key)
+          const existingLinkKeys = new Set(prev.links.map(l => `${l.source}-${l.target}`));
+          const newLinks = newData.links.filter(l => !existingLinkKeys.has(`${l.source}-${l.target}`));
+
+          return {
+            nodes: [...prev.nodes, ...newNodes],
+            links: [...prev.links, ...newLinks]
+          };
+        });
+      }
+    } catch (error) {
+      console.error("Failed to expand graph:", error);
+    } finally {
+      setIsExpanding(false);
+    }
+  };
 
   const isLoading = loadingMovies || loadingPersons;
 
-  if (selectedNodeId && graphData) {
+  if (graphData) {
+    const selectedNode = graphData.nodes.find(n => n.id === focusedNodeId);
+
     return (
       <div className="page graph-view-page">
         <div className="graph-header">
-          <button className="back-btn" onClick={() => setSelectedNodeId(null)}>
+          <button className="back-btn" onClick={() => { setGraphData(null); setFocusedNodeId(null); }}>
             ← Back to Search
           </button>
-          <h2>Exploring {graphData.nodes.find(n => n.id === selectedNodeId)?.name}</h2>
+          <h2>Exploring the Graph</h2>
         </div>
-        <div className="graph-layout">
-          <GraphViewer 
-            data={graphData} 
-            onNodeClick={(node) => setSelectedNodeId(node.id)}
-            height={window.innerHeight - 200}
+        <div className="graph-layout-container">
+          <div className="graph-layout">
+            <GraphViewer 
+              data={graphData} 
+              onNodeClick={(node) => handleNodeSelect(node.id)}
+            />
+            {isExpanding && <div className="graph-overlay">Expanding...</div>}
+          </div>
+
+          <NodeDetailPanel 
+            nodeId={focusedNodeId}
+            label={selectedNode?.label || null}
+            onClose={() => setFocusedNodeId(null)}
+            onMovieClick={handleNodeSelect}
           />
-          {loadingGraph && <div className="graph-overlay">Loading...</div>}
         </div>
       </div>
     );
@@ -86,7 +127,7 @@ function ExplorePage() {
             <div 
               key={movie.id} 
               className="result-card"
-              onClick={() => setSelectedNodeId(movie.id)}
+              onClick={() => handleNodeSelect(movie.id)}
             >
               <h3>{movie.title}</h3>
               <div className="result-meta">
@@ -104,7 +145,7 @@ function ExplorePage() {
             <div 
               key={person.id} 
               className="result-card"
-              onClick={() => setSelectedNodeId(person.id)}
+              onClick={() => handleNodeSelect(person.id)}
             >
               <h3>{person.name}</h3>
               {person.birth_year && (

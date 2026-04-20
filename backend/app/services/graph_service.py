@@ -18,6 +18,9 @@ async def get_neighbors(session: AsyncSession, node_id: str) -> GraphData:
     if not record or not record["n"]:
         return GraphData(nodes=[], links=[])
 
+    def get_node_id(node):
+        return node.get("id") or node.get("name")
+
     root_node = record["n"]
     neighbors = record["neighbors"]
     rels = record["rels"]
@@ -27,7 +30,7 @@ async def get_neighbors(session: AsyncSession, node_id: str) -> GraphData:
     seen_ids = set()
 
     # Add root node
-    root_id = root_node["id"]
+    root_id = get_node_id(root_node)
     root_label = list(root_node.labels)[0]
     nodes.append(
         GraphNode(
@@ -42,7 +45,7 @@ async def get_neighbors(session: AsyncSession, node_id: str) -> GraphData:
     # Add neighbor nodes
     for m in neighbors:
         if not m: continue
-        m_id = m["id"]
+        m_id = get_node_id(m)
         if m_id not in seen_ids:
             m_label = list(m.labels)[0]
             nodes.append(
@@ -58,16 +61,13 @@ async def get_neighbors(session: AsyncSession, node_id: str) -> GraphData:
     # Add relationships
     for r in rels:
         if not r: continue
-        # r.start_node and r.end_node are accessible
-        # But we need their 'id' property
-        # Neo4j objects have element_id but we used 'id' property in our schema
         start_node = r.start_node
         end_node = r.end_node
         
         links.append(
             GraphLink(
-                source=start_node["id"],
-                target=end_node["id"],
+                source=get_node_id(start_node),
+                target=get_node_id(end_node),
                 type=r.type,
                 properties=dict(r)
             )

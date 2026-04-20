@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import type { ForceGraphMethods } from "react-force-graph-2d";
 import type { GraphData, GraphNode } from "../api/client";
@@ -17,15 +17,36 @@ const COLORS = {
   Default: "#a78bfa", // Purple
 };
 
-const GraphViewer = ({ data, onNodeClick, width, height }: GraphViewerProps) => {
+const GraphViewer = ({ data, onNodeClick, width: overrideWidth, height: overrideHeight }: GraphViewerProps) => {
   const fgRef = useRef<ForceGraphMethods>();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-  // Center the graph when data changes
   useEffect(() => {
-    if (fgRef.current && data.nodes.length > 0) {
-      fgRef.current.zoomToFit(400, 100);
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        const { width, height } = entries[0].contentRect;
+        setDimensions({ width, height });
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const width = overrideWidth || dimensions.width;
+  const height = overrideHeight || dimensions.height;
+
+  // Center the graph when data changes or dimensions initialize
+  useEffect(() => {
+    if (fgRef.current && data.nodes.length > 0 && width > 0 && height > 0) {
+      setTimeout(() => {
+        if (fgRef.current) {
+          fgRef.current.zoomToFit(400, 50);
+        }
+      }, 100);
     }
-  }, [data]);
+  }, [data, width, height]);
 
   const paintNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const label = node.name;
@@ -60,24 +81,26 @@ const GraphViewer = ({ data, onNodeClick, width, height }: GraphViewerProps) => 
   }, []);
 
   return (
-    <div className="graph-container">
-      <ForceGraph2D
-        ref={fgRef}
-        graphData={data}
-        width={width}
-        height={height}
-        nodeLabel={(node: any) => `${node.label}: ${node.name}`}
-        nodeCanvasObject={paintNode}
-        nodeCanvasObjectMode={() => "before"}
-        linkColor={() => "rgba(255, 255, 255, 0.1)"}
-        linkDirectionalArrowLength={3.5}
-        linkDirectionalArrowRelPos={1}
-        linkCurvature={0.1}
-        onNodeClick={onNodeClick}
-        cooldownTicks={100}
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
-      />
+    <div className="graph-container" ref={containerRef} style={{ width: '100%', height: '100%' }}>
+      {width > 0 && height > 0 && (
+        <ForceGraph2D
+          ref={fgRef}
+          graphData={data}
+          width={width}
+          height={height}
+          nodeLabel={(node: any) => `${node.label}: ${node.name}`}
+          nodeCanvasObject={paintNode}
+          nodeCanvasObjectMode={() => "before"}
+          linkColor={() => "rgba(255, 255, 255, 0.1)"}
+          linkDirectionalArrowLength={3.5}
+          linkDirectionalArrowRelPos={1}
+          linkCurvature={0.1}
+          onNodeClick={onNodeClick}
+          cooldownTicks={100}
+          d3AlphaDecay={0.02}
+          d3VelocityDecay={0.3}
+        />
+      )}
     </div>
   );
 };

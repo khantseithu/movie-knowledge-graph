@@ -32,6 +32,24 @@ export interface GraphData {
   links: GraphLink[];
 }
 
+export interface MovieRef {
+  id: string;
+  title: string;
+  release_year: number | null;
+  role?: string;
+}
+
+export interface MovieDetail extends MovieBase {
+  genres: string[];
+  cast: PersonBase[];
+  directors: PersonBase[];
+}
+
+export interface PersonDetail extends PersonBase {
+  movies_acted: MovieRef[];
+  movies_directed: MovieRef[];
+}
+
 export interface PathResult {
   path: GraphNode[];
   links: GraphLink[];
@@ -44,9 +62,21 @@ export async function searchMovies(query: string): Promise<{ results: MovieBase[
   return res.json();
 }
 
+export async function getMovie(id: string): Promise<MovieDetail> {
+  const res = await fetch(`${API_BASE}/movies/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error("Failed to fetch movie details");
+  return res.json();
+}
+
 export async function searchPersons(query: string): Promise<{ results: PersonBase[]; total: number }> {
   const res = await fetch(`${API_BASE}/persons?q=${encodeURIComponent(query)}`);
   if (!res.ok) throw new Error("Failed to search persons");
+  return res.json();
+}
+
+export async function getPerson(id: string): Promise<PersonDetail> {
+  const res = await fetch(`${API_BASE}/persons/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error("Failed to fetch person details");
   return res.json();
 }
 

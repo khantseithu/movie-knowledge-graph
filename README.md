@@ -2,6 +2,10 @@
 
 A knowledge graph built from IMDB data to explore movie/actor/director relationships, find shortest paths between actors ("Six Degrees of Kevin Bacon"), and generate movie recommendations.
 
+## Demo
+
+![PMKG Screenshot](demo.png)
+
 ## Tech Stack
 
 | Layer | Technology |
